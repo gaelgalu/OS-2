@@ -59,13 +59,16 @@ void freePhotonArray(Photon** photonArray, int n) {
 void* move(void* photon) {
 	Photon* p = (Photon*) photon;
 
+	int col = 0;
+	int row = 0;
+
 	while (p->state) {
 
-		/* Obtain the distance to move*/
+		/* Obtain the distance to move */
 		int random = rand() % 1000;
 		double distance = log(1-(random/1000.0)) * (-1);
 
-		/* Randomly generate the vector*/
+		/* Randomly generate the vector */
 		int direction[2];
 		direction[0] = rand() % p->grid->cols;
 		direction[1] = rand() % p->grid->rows;
@@ -78,7 +81,7 @@ void* move(void* photon) {
 		}
 		*/
 
-		/* Select the signs randomly*/
+		/* Select the signs randomly */
 		if (rand() % 2) {
 			direction[0] = direction[0] * (-1);
 		}
@@ -86,37 +89,53 @@ void* move(void* photon) {
 			direction[1] = direction[1] * (-1);
 		}
 
-		/* Obtain a new position for the photon*/
+		/* Obtain a new position for the photon */
 		float newPosX = p->posX + (distance * direction[0]);
 		float newPosY = p->posY + (distance * direction[1]);
 
-
-		printf("photon %d moved to (%f,%f)\n", p->id, newPosX, newPosY);
-
 		/* CASE 1: The photon ends out of the grid */
 		if ((newPosX > p->grid->cols || newPosY > p->grid->rows) || (newPosX < 0 || newPosY < 0)) {
-			printf("photon %d out in (%f,%f)\n", p->id, newPosX, newPosY);
 			p->state = 0;
 		}
-		/* CASE 2: The photon ends between two cells*/
+
+		/* CASE 2: The photon ends between two cells */
 		else if ((newPosX - (int)newPosX) == 0 || (newPosY - (int)newPosY) == 0 ) {
-			printf("photon %d between cells in (%f,%f)\n", p->id, newPosX, newPosY);
+
+			/* Move the photon to the correct cell*/
+			if (newPosX - (int)newPosX == 0) {
+				col = ((int)newPosX/p->grid->delta) + 1;
+			}
+			if (newPosY - (int)newPosY == 0) {
+				row = ((int)newPosY/p->grid->delta) + 1;
+			}
+
+			/* The cell is inside the matrix */
+			if (col <= p->grid->cols && row <= p->grid->rows) {
+				/* Absorption's events (50% chance) */
+				if (rand()%2) {
+					pthread_mutex_lock(&(p->grid->mutex[row][col]));
+					p->grid->matrix[row][col] ++;
+					pthread_mutex_unlock(&(p->grid->mutex[row][col]));
+				}
+			}
+			/* The cell is outside the matrix */
+			else {
+				p->state = 0;
+			}
 		}
-		/* CASE 2: The photon ends into a cell*/
+		/* CASE 3: The photon ends into a cell directly */
 		else {
-			/* CASE 2.1: An absorption's events ocurrs*/
+			/* Absorption's events (50% chance) */
 			if (rand()%2) {
-				/* Obtain the cell to absorb the energy*/
-				int col = (int)newPosX/p->grid->delta;
-				int row = (int)newPosY/p->grid->delta;
+				/* Obtain the cell to absorb the energy */
+				col = (int)newPosX/p->grid->delta;
+				row = (int)newPosY/p->grid->delta;
+
+				/* Mutual exclusion */
 				pthread_mutex_lock(&(p->grid->mutex[row][col]));
-				printf("photon %d lock matrix in (%d,%d)\n", p->id, row, col);
 				p->grid->matrix[row][col] ++;
-				printf("photon %d unlock matrix in (%d,%d)\n", p->id, row, col);
 				pthread_mutex_unlock(&(p->grid->mutex[row][col]));
 			}
-			/*CASE 2.1: An diffusion's events ocurrs (nothing to do)*/
-
 		}
 		p->posX = newPosX;
 		p->posY = newPosY;
@@ -137,8 +156,6 @@ void init(int bflag, int n, int L, int X, int Y, float d) {
 
 	int i,j;
 
-	printf("\n");
-
 	/* Initialize the theads*/
 	for (i = 0; i < n; i++) {
 		pthread_create(&threadArray[i], NULL, move, (void*)photonArray[i]);
@@ -149,13 +166,13 @@ void init(int bflag, int n, int L, int X, int Y, float d) {
 		pthread_join(threadArray[i], NULL);
 	}
 
-	/* Show the final matrix*/
-	printf("\n\n");
-	for (i = 0; i < X; i++) {
-		for (j = 0; j < Y; j++) {
-			printf("[ %d ] ", grid->matrix[i][j]);
+	/* Show the final matrix (bflag needed)*/
+	if (bflag) {
+		for (i = 0; i < Y; i++) {
+			for (j = 0; j < X; j++) {
+				printf("<%d [%d][%d]>\n", grid->matrix[j][i], i, j);
+			}
 		}
-		printf("\n");
 	}
 
 	/* Free the memory allocated*/
