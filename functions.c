@@ -195,14 +195,13 @@ void init(int bflag, int n, float L, int X, int Y, float d) {
 		pthread_join(threadArray[i], NULL);
 	}
 
-	/* Show the final matrix (bflag needed)*/
-	if (bflag) {
-		for (i = 0; i < Y; i++) {
-			for (j = 0; j < X; j++) {
-				fprintf(output, "<%d [%d][%d]>\n", grid->matrix[j][i], i, j);
-			}
+	/* Write the final matrix on the output file*/
+	for (i = 0; i < Y; i++) {
+		for (j = 0; j < X; j++) {
+			fprintf(output, "<%d [%d][%d]>\n", grid->matrix[j][i], i, j);
 		}
 	}
+
 
 	/* Free the memory allocated*/
 	freeGrid(grid);
