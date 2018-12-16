@@ -11,6 +11,7 @@ typedef struct Grid {
     pthread_mutex_t** mutex;
     int rows;
     int cols;
+    int flag;
     float delta;
 } Grid;
 
@@ -23,7 +24,7 @@ typedef struct Photon {
     Grid* grid;
 } Photon;
 
-Grid* gridInit(int X, int Y, float d);
+Grid* gridInit(int X, int Y, float d, int flag);
 Photon** photonArrayInit(Grid* grid, int n, float L);
 void freeGrid(Grid* grid);
 void freePhotonArray(Photon** photonArray, int n);
