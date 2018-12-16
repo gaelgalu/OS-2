@@ -47,7 +47,6 @@ void freeGrid(Grid* grid) {
 	}
 	free(grid->matrix);
 	free(grid->mutex);
-	free(grid);
 }
 
 void freePhotonArray(Photon** photonArray, int n) {
@@ -226,8 +225,8 @@ void init(int bflag, int n, float L, int X, int Y, float d) {
 	fclose(output);
 
 	/* Free the memory allocated*/
-	// freeGrid(grid);
-	// freePhotonArray(photonArray, n);
-	// free(threadArray);
+	freeGrid(grid);
+	freePhotonArray(photonArray, n);
+	free(threadArray);
 
 }
