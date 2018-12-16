@@ -22,7 +22,7 @@ Grid* gridInit(int X, int Y, float d) {
 	return grid;
 }
 
-Photon** photonArrayInit(Grid* grid, int n, int L) {
+Photon** photonArrayInit(Grid* grid, int n, float L) {
 	Photon** photonArray = (Photon**)calloc(n, sizeof(Photon*));
 	for (int i = 0; i < n; i++) {
 		photonArray[i] = (Photon*)calloc(1,sizeof(Photon));
@@ -59,8 +59,7 @@ void freePhotonArray(Photon** photonArray, int n) {
 void* move(void* photon) {
 	Photon* p = (Photon*) photon;
 
-	int col = 0;
-	int row = 0;
+	int row,col;
 
 	while (p->state) {
 
@@ -69,9 +68,18 @@ void* move(void* photon) {
 		double distance = log(1-(random/1000.0)) * (-1);
 
 		/* Randomly generate the vector */
-		int direction[2];
+		float direction[2];
 		direction[0] = rand() % p->grid->cols;
 		direction[1] = rand() % p->grid->rows;
+
+		/* Obtain the norm */
+		float norm = sqrt(pow(direction[0], 2) + pow(direction[1], 2));
+
+		/* Calculate the unitary vector */
+		if (norm != 0) {
+			direction[0] = direction[0]/norm;
+			direction[1] = direction[1]/norm;
+		}
 
 		/*
 		// Remove block-comments to avoid vector = 0i + 0j
@@ -89,9 +97,27 @@ void* move(void* photon) {
 			direction[1] = direction[1] * (-1);
 		}
 
-		/* Obtain a new position for the photon */
+		/* Obtain a new position for the photon using the unitary vector */
 		float newPosX = p->posX + (distance * direction[0]);
 		float newPosY = p->posY + (distance * direction[1]);
+
+		/* Check if the distance (L) is not enough */
+		if (p->L - sqrt(pow(distance * direction[0], 2) + pow(distance * direction[1], 2)) <= 0) {
+			newPosX = p->posX + (p->L * direction[0]);
+			newPosY = p->posY + (p->L * direction[1]);
+			if ((newPosX > p->grid->cols || newPosY > p->grid->rows) || (newPosX < 0 || newPosY < 0)) {
+				p->state = 0;
+				break;
+			}
+
+			col = (int)newPosX/p->grid->delta;
+			row = (int)newPosY/p->grid->delta;
+
+			/* Absorption's events (100% chance) */
+			pthread_mutex_lock(&(p->grid->mutex[row][col]));
+			p->grid->matrix[row][col] ++;
+			pthread_mutex_unlock(&(p->grid->mutex[row][col]));
+		}
 
 		/* CASE 1: The photon ends out of the grid */
 		if ((newPosX > p->grid->cols || newPosY > p->grid->rows) || (newPosX < 0 || newPosY < 0)) {
@@ -139,17 +165,20 @@ void* move(void* photon) {
 		}
 		p->posX = newPosX;
 		p->posY = newPosY;
-
+		p->L -= distance;
 	}
 	return NULL;
 }
 
-void init(int bflag, int n, int L, int X, int Y, float d) {
+void init(int bflag, int n, float L, int X, int Y, float d) {
 
 	/* Generate the grid, photons and the threads*/
 	Grid* grid = gridInit(X,Y, d);
 	Photon** photonArray = photonArrayInit(grid, n, L);
 	pthread_t* threadArray = (pthread_t*)calloc(n, sizeof(pthread_t));
+
+	/* Output file*/
+	FILE* output = fopen("Output.txt", "w");
 
 	/* Seed for rand()*/
 	srand(time(NULL));
@@ -170,7 +199,7 @@ void init(int bflag, int n, int L, int X, int Y, float d) {
 	if (bflag) {
 		for (i = 0; i < Y; i++) {
 			for (j = 0; j < X; j++) {
-				printf("<%d [%d][%d]>\n", grid->matrix[j][i], i, j);
+				fprintf(output, "<%d [%d][%d]>\n", grid->matrix[j][i], i, j);
 			}
 		}
 	}

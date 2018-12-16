@@ -5,9 +5,9 @@ int main(int argc, char **argv) {
     int bflag = 0;
 
     int n = 0;
-	int L = 0;
+	float L = 0;
 	int X = 0;
-	int Y = 0; 
+	int Y = 0;
     float d = 0;
 
     opterr = 0;
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
                 sscanf(optarg, "%d", &n);
                 break;
             case 'L':
-                sscanf(optarg, "%d", &L);
+                sscanf(optarg, "%f", &L);
                 break;
             case 'X':
                 sscanf(optarg, "%d", &X);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
                 abort();
         }
     }
-	
+
 	init(bflag, n, L, X, Y, d);
 
     return 0;

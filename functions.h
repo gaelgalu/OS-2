@@ -17,15 +17,15 @@ typedef struct Grid {
 typedef struct Photon {
     int id;
     int state;
-    int L;
+    float L;
     float posX;
     float posY;
     Grid* grid;
 } Photon;
 
 Grid* gridInit(int X, int Y, float d);
-Photon** photonArrayInit(Grid* grid, int n, int L);
+Photon** photonArrayInit(Grid* grid, int n, float L);
 void freeGrid(Grid* grid);
 void freePhotonArray(Photon** photonArray, int n);
 void* move(void* photon);
-void init(int bflag, int n, int L, int X, int Y, float d);
+void init(int bflag, int n, float L, int X, int Y, float d);
