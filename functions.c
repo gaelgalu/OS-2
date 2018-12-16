@@ -118,11 +118,11 @@ void* move(void* photon) {
 			else {
 				/* Absorption's events (100% chance) */
 				pthread_mutex_lock(&(p->grid->mutex[col][row]));
-				if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, row, col);
+				if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, col, row);
 
 				p->grid->matrix[col][row] ++;
 				pthread_mutex_unlock(&(p->grid->mutex[col][row]));
-				if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d]. The photon stops moving.\n\n", p->id, row, col);
+				if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d]. The photon stops moving.\n\n", p->id, col, row);
 			}
 
 			p->state = 0;
@@ -151,12 +151,12 @@ void* move(void* photon) {
 				/* Absorption's events (50% chance) */
 				if (rand()%2) {
 					pthread_mutex_lock(&(p->grid->mutex[col][row]));
-					if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, row, col);
+					if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, col, row);
 
 					p->grid->matrix[col][row] ++;
 					pthread_mutex_unlock(&(p->grid->mutex[col][row]));
 
-					if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d].\n\n", p->id, row, col);
+					if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d].\n\n", p->id, col, row);
 
 				}
 			}
@@ -172,12 +172,12 @@ void* move(void* photon) {
 			if (rand()%2) {
 				/* Mutual exclusion */
 				pthread_mutex_lock(&(p->grid->mutex[col][row]));
-				if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, row, col);
+				if (p->grid->flag) printf("[Photon %d] Has locked the grid on the position [X=%d], [Y=%d] to make an absorption.\n\n", p->id, col, row);
 
 				p->grid->matrix[col][row] ++;
 				pthread_mutex_unlock(&(p->grid->mutex[col][row]));
 
-				if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d].\n\n", p->id, row, col);
+				if (p->grid->flag) printf("[Photon %d] Has made the absorption and has unlocked the grid on the position [X=%d], [Y=%d].\n\n", p->id, col, row);
 
 			}
 		}
